@@ -2,8 +2,7 @@ import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import MainScreenBg from '../assets/CheckPoint/MainScreenBg.png';
 import { 
-  FaPaperPlane, FaFileAlt, FaImage, FaVideo, FaVolumeUp, 
-  FaBars, FaTimes, FaKey, FaUser 
+  FaPaperPlane, FaFileAlt, FaImage, FaVideo, FaVolumeUp, FaBars, FaTimes, FaKey, FaUser, FaFileUpload
 } from "react-icons/fa";
 import { BsCaretLeft, BsCaretRight } from "react-icons/bs";
 
@@ -67,26 +66,18 @@ export default function MainScreen() {
         </button>
 
         {/* Left Menu */}
-<div className={`absolute top-6 left-16 w-64 bg-white/10 backdrop-blur-sm border border-white/20 shadow-md rounded-3xl z-30 transition-transform duration-300 ease-in-out max-h-[90vh] overflow-y-auto transform origin-top-left ${menuOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
-  <div className="p-6 pt-4 flex flex-col gap-4">
-    
-    {/* API Production Button */}
-    <button
-      onClick={() => navigate("/production")}
-      className="flex items-center gap-3 text-black font-semibold px-4 py-3 bg-orange-300 rounded-3xl hover:bg-orange-200 hover:scale-105 transition-all duration-200 w-full shadow-md"
-    >
-      <FaKey className="text-xl" />
-      <span>API Production</span>
-    </button>
-
-    {/* Login Button */}
-    <button className="flex items-center gap-3 text-black font-semibold px-4 py-3 bg-white/10 rounded-3xl hover:bg-white/20 hover:scale-105 transition-all duration-200 w-full shadow-md">
-      <FaUser className="text-xl" />
-      <span>Login</span>
-    </button>
-  </div>
-</div>
-
+        <div className={`absolute top-6 left-16 w-64 bg-white/10 backdrop-blur-sm border border-white/20 shadow-md rounded-3xl z-30 transition-transform duration-300 ease-in-out max-h-[90vh] overflow-y-auto transform origin-top-left ${menuOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
+          <div className="p-6 pt-4 flex flex-col gap-4">
+            <button className="flex items-center gap-3 text-black font-semibold px-4 py-3 bg-orange-300 rounded-3xl hover:bg-orange-200 hover:scale-105 transition-all duration-200 w-full shadow-md">
+              <FaKey className="text-xl" />
+              <span>API Production</span>
+            </button>
+            <button className="flex items-center gap-3 text-black font-semibold px-4 py-3 bg-white/10 rounded-3xl hover:bg-white/20 hover:scale-105 transition-all duration-200 w-full shadow-md">
+              <FaUser className="text-xl" />
+              <span>Login</span>
+            </button>
+          </div>
+        </div>
 
         {/* Upload Card */}
         <div
@@ -95,7 +86,7 @@ export default function MainScreen() {
         >
           {/* Upload Icon */}
           <div className="bg-white/20 backdrop-blur-lg rounded-full p-6 mb-6 shadow-inner hover:scale-110 transition-all duration-300">
-            <FaPaperPlane className="text-6xl text-orange-400" />
+            <FaFileUpload className="text-6xl text-black" />
           </div>
 
           <h1 className="text-3xl font-bold mb-3 text-black text-center">Upload Content for Authentication</h1>
