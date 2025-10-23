@@ -2,8 +2,10 @@ import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import MainScreenBg from '../assets/CheckPoint/MainScreenBg.png';
 import { 
-  FaPaperPlane, FaFileAlt, FaImage, FaVideo, FaVolumeUp, FaBars, FaTimes, FaKey, FaUser, FaFileUpload
+  FaPaperPlane, FaFileAlt, FaImage, FaVideo, FaVolumeUp, 
+  FaBars, FaTimes, FaKey, FaUser, FaFileUpload
 } from "react-icons/fa";
+import { ReactComponent as Image01Icon } from '../assets/CheckPoint/coolicons _ Free Iconset (Community)/Media/Image_01.svg';
 import { BsCaretLeft, BsCaretRight } from "react-icons/bs";
 
 export default function MainScreen() {
@@ -19,7 +21,7 @@ export default function MainScreen() {
     { title: "Misleading Video Content", time: "12m ago", icon: <FaVideo /> },
     { title: "False Health Claims", time: "18m ago", icon: <FaFileAlt /> },
     { title: "Manipulated Statistics", time: "25m ago", icon: <FaFileAlt /> },
-    { title: "AI Generated Content Found", time: "30m ago", icon: <FaFileAlt /> },
+    { title: "AI Generated Content Found", time: "30m ago", icon: <Image01Icon /> },
     { title: "Deepfake Video Detected", time: "35m ago", icon: <FaVideo /> },
     { title: "Modified Audio Content", time: "42m ago", icon: <FaVolumeUp /> },
     { title: "Suspicious Account Activity", time: "48m ago", icon: <FaFileAlt /> },
@@ -34,7 +36,6 @@ export default function MainScreen() {
   };
 
   const triggerFileUpload = () => fileInputRef.current.click();
-  const handleUploadClick = () => navigate("/results");
 
   return (
     <div className="relative min-h-screen flex flex-col font-piazzolla">
@@ -54,7 +55,6 @@ export default function MainScreen() {
         accept="image/*,video/*,audio/*,.pdf,.txt,.doc,.docx"
       />
 
-      {/* Content */}
       <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-center gap-10">
 
         {/* Hamburger Menu */}
@@ -68,7 +68,10 @@ export default function MainScreen() {
         {/* Left Menu */}
         <div className={`absolute top-6 left-16 w-64 bg-white/10 backdrop-blur-sm border border-white/20 shadow-md rounded-3xl z-30 transition-transform duration-300 ease-in-out max-h-[90vh] overflow-y-auto transform origin-top-left ${menuOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
           <div className="p-6 pt-4 flex flex-col gap-4">
-            <button className="flex items-center gap-3 text-black font-semibold px-4 py-3 bg-orange-300 rounded-3xl hover:bg-orange-200 hover:scale-105 transition-all duration-200 w-full shadow-md">
+            <button
+              onClick={() => navigate("/production")}
+              className="flex items-center gap-3 text-black font-semibold px-4 py-3 bg-orange-300 rounded-3xl hover:bg-orange-200 hover:scale-105 transition-all duration-200 w-full shadow-md"
+            >
               <FaKey className="text-xl" />
               <span>API Production</span>
             </button>
@@ -84,18 +87,18 @@ export default function MainScreen() {
           onClick={triggerFileUpload}
           className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-3xl shadow-lg p-12 text-center cursor-pointer hover:scale-105 hover:bg-white/30 transition-all duration-300 flex flex-col items-center justify-center"
         >
-          {/* Upload Icon */}
+          {/* Top Upload Icon */}
           <div className="bg-white/20 backdrop-blur-lg rounded-full p-6 mb-6 shadow-inner hover:scale-110 transition-all duration-300">
             <FaFileUpload className="text-6xl text-black" />
           </div>
 
           <h1 className="text-3xl font-bold mb-3 text-black text-center">Upload Content for Authentication</h1>
-          <p className="text-black mb-8 text-sm leading-relaxed text-center">
-            Drop your images, text, or video content here to verify its authenticity and detect potential misinformation.
+          <p className="text-black mb-6 text-sm leading-relaxed text-center">
+            Drop your images, text, or video content here to verify its authenticity.
           </p>
 
-          {/* Content Type Options */}
-          <div className="flex justify-center gap-6 mb-6 text-sm pointer-events-none text-black">
+          {/* Content Type Icons */}
+          <div className="flex justify-center gap-6 mb-6 text-sm text-black">
             <div className="flex items-center gap-2 font-medium"><FaFileAlt className="text-lg" /> Text</div>
             <div className="flex items-center gap-2 font-medium"><FaImage className="text-lg" /> Images</div>
             <div className="flex items-center gap-2 font-medium"><FaVideo className="text-lg" /> Videos</div>
@@ -106,7 +109,7 @@ export default function MainScreen() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (selectedFile) handleUploadClick();
+              if (selectedFile) navigate("/results"); 
             }}
             disabled={!selectedFile}
             className={`flex items-center justify-center bg-white/25 backdrop-blur-lg border border-white/30 text-black font-bold p-6 rounded-3xl shadow-lg text-3xl 
@@ -131,7 +134,7 @@ export default function MainScreen() {
           {sidebarOpen ? <BsCaretRight /> : <BsCaretLeft />}
         </button>
 
-        {/* Right Sidebar with Alerts */}
+        {/* Right Sidebar */}
         <div className={`absolute top-1/2 right-4 -translate-y-1/2 w-80 bg-white/10 backdrop-blur-sm border border-white/20 shadow-md rounded-3xl z-20 transition-transform duration-300 ease-in-out max-h-[90vh] overflow-y-auto ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="p-6 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-orange-500 scrollbar-track-orange-200">
             <h2 className="text-white text-xl font-bold mb-6 mt-4 sticky top-0 py-2 z-10">Recent Alerts</h2>
@@ -139,6 +142,7 @@ export default function MainScreen() {
               {alerts.map((alert, index) => (
                 <div
                   key={index}
+                  onClick={() => navigate("/results")}
                   className="bg-white/10 backdrop-blur-sm rounded-3xl p-4 shadow-md hover:bg-white/20 hover:scale-105 transition-all duration-200 cursor-pointer border border-white/20"
                 >
                   <div className="flex items-start justify-between text-white">
@@ -153,7 +157,6 @@ export default function MainScreen() {
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Footer */}
@@ -161,7 +164,7 @@ export default function MainScreen() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-center md:text-left">
             <h3 className="font-bold text-lg mb-1">CheckPoint</h3>
-            <p className="text-sm">Verifying truth in the digital world, providing transparency and reliability.</p>
+            <p className="text-sm">Verifying truth in the digital world.</p>
           </div>
           <div className="text-center md:text-right text-xs opacity-70">
             &copy; 2025 CheckPoint. All rights reserved.

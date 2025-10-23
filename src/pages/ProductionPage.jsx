@@ -324,8 +324,7 @@ export default function ProductionPage() {
             </motion.div>
           </div>
 
-          {/* Footer */}
-          <footer className="relative z-10 bg-white/10 backdrop-blur-lg border border-white/20 rounded-t-3xl shadow-md text-white py-6 px-8 mt-auto w-full">
+         <footer className="relative z-10 bg-white/10 backdrop-blur-lg border border-white/20 rounded-t-3xl shadow-md text-white py-6 px-8 mt-auto w-full">
   <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
     <div className="text-center md:text-left">
       <h3 className="font-bold text-lg mb-1">CheckPoint</h3>
