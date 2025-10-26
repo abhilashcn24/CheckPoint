@@ -2,9 +2,16 @@ import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Home } from "lucide-react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Gradient from "../assets/CheckPoint/ResultPage.png";
-import EiffelImage from "../assets/CheckPoint/image.png"; // Eiffel Tower image
+import EiffelImage from "../assets/CheckPoint/image.png";
+
+// Import social media icons
+import LinkedinIcon from "../assets/CheckPoint/Social Media Icons & Logos (Community)/LinkedIn.png";
+import FBIcon from "../assets/CheckPoint/Social Media Icons & Logos (Community)/FB.png";
+import WhatsappIcon from "../assets/CheckPoint/Social Media Icons & Logos (Community)/Whatsapp.png";
+import XIcon from "../assets/CheckPoint/Social Media Icons & Logos (Community)/X.png";
+import TelegramIcon from "../assets/CheckPoint/Social Media Icons & Logos (Community)/Telegram.png";
 
 const originalityData = [
   { name: "Original", value: 26 },
@@ -38,13 +45,76 @@ const loadingData = [
 
 const LOADING_COLORS = ["#f97316", "#1E1E1E"];
 
+// Social media icons array
+const allSocialMediaIcons = [
+  { icon: LinkedinIcon, name: "LinkedIn" },
+  { icon: FBIcon, name: "Facebook" },
+  { icon: WhatsappIcon, name: "WhatsApp" },
+  { icon: XIcon, name: "X" },
+  { icon: TelegramIcon, name: "Telegram" }
+];
+
+// Function to get loading message based on content type
+const getLoadingMessage = (contentType) => {
+  const messages = {
+    text: "Analyzing Text Content...",
+    image: "Detecting Image Authenticity...",
+    video: "Verifying Video Content...",
+    audio: "Analyzing Audio File...",
+    pdf: "Scanning PDF Document...",
+    doc: "Processing Document...",
+    default: "Analyzing Content..."
+  };
+  return messages[contentType] || messages.default;
+};
+
+// Function to determine content type from file or alert
+const determineContentType = (file, alertTitle) => {
+  if (file) {
+    const fileName = file.name.toLowerCase();
+    if (fileName.match(/\.(jpg|jpeg|png|gif|bmp|svg|webp)$/)) return 'image';
+    if (fileName.match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/)) return 'video';
+    if (fileName.match(/\.(mp3|wav|ogg|m4a|flac|aac)$/)) return 'audio';
+    if (fileName.match(/\.pdf$/)) return 'pdf';
+    if (fileName.match(/\.(doc|docx|txt|rtf)$/)) return 'doc';
+    if (fileName.match(/\.(txt|md|csv)$/)) return 'text';
+  }
+  
+  // Fallback to alert title
+  if (alertTitle) {
+    if (alertTitle.toLowerCase().includes('image')) return 'image';
+    if (alertTitle.toLowerCase().includes('video')) return 'video';
+    if (alertTitle.toLowerCase().includes('audio')) return 'audio';
+    if (alertTitle.toLowerCase().includes('text') || alertTitle.toLowerCase().includes('news')) return 'text';
+    if (alertTitle.toLowerCase().includes('document')) return 'doc';
+  }
+  
+  return 'default';
+};
+
 export default function Results() {
   const [loading, setLoading] = useState(true);
+  const [selectedIcons, setSelectedIcons] = useState([]);
+  const [loadingMessage, setLoadingMessage] = useState("Analyzing Content...");
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
+    // Get content type from location state (passed from MainScreen)
+    const file = location.state?.file;
+    const alertTitle = location.state?.alertTitle;
+    
+    const contentType = determineContentType(file, alertTitle);
+    setLoadingMessage(getLoadingMessage(contentType));
+    
     const timer = setTimeout(() => setLoading(false), 3000);
     return () => clearTimeout(timer);
+  }, [location]);
+
+  useEffect(() => {
+    // Randomly select 4 icons from the available icons
+    const shuffled = [...allSocialMediaIcons].sort(() => 0.5 - Math.random());
+    setSelectedIcons(shuffled.slice(0, 4));
   }, []);
 
   // Animation variants
@@ -63,7 +133,7 @@ export default function Results() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
         >
-          Detected Image: Verified
+          {loadingMessage}
         </motion.h1>
         <motion.div animate={rotateInfinite}>
           <PieChart width={300} height={300}>
@@ -209,7 +279,7 @@ export default function Results() {
                 <img 
                   src={EiffelImage} 
                   alt="Eiffel Tower"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
               
@@ -223,18 +293,18 @@ export default function Results() {
 
         {/* Social Media Icons */}
         <motion.div variants={fadeInUp} initial="hidden" animate="visible" className="max-w-6xl mx-auto mt-8 flex justify-end gap-6 pr-6">
-          <div className="w-10 h-10 border-2 border-orange-500/50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-orange-500/20 hover:border-orange-400 transition-all bg-black/40 backdrop-blur-sm">
-            <span className="text-xl">📷</span>
-          </div>
-          <div className="w-10 h-10 border-2 border-orange-500/50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-orange-500/20 hover:border-orange-400 transition-all bg-black/40 backdrop-blur-sm">
-            <span className="text-xl">in</span>
-          </div>
-          <div className="w-10 h-10 border-2 border-orange-500/50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-orange-500/20 hover:border-orange-400 transition-all bg-black/40 backdrop-blur-sm">
-            <span className="text-xl">⊗</span>
-          </div>
-          <div className="w-10 h-10 border-2 border-orange-500/50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-orange-500/20 hover:border-orange-400 transition-all bg-black/40 backdrop-blur-sm">
-            <span className="text-xl">𝕏</span>
-          </div>
+          {selectedIcons.map((social, index) => (
+            <div 
+              key={index}
+              className="w-10 h-10 border-2 border-orange-500/50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-orange-500/20 hover:border-orange-400 transition-all bg-black/40 backdrop-blur-sm overflow-hidden"
+            >
+              <img 
+                src={social.icon} 
+                alt={social.name}
+                className="w-6 h-6 object-contain"
+              />
+            </div>
+          ))}
         </motion.div>
       </div>
 
