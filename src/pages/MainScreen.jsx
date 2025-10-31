@@ -12,6 +12,8 @@ import {
   FaKey,
   FaUser,
   FaFileUpload,
+  FaPaste,
+  FaLink,
 } from "react-icons/fa";
 import { BsCaretLeft, BsCaretRight } from "react-icons/bs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +24,9 @@ export default function MainScreen() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [pastedContent, setPastedContent] = useState("");
+  const [contentType, setContentType] = useState("text"); // 'text' or 'link'
+  const [inputMode, setInputMode] = useState("upload"); // 'upload', 'text', or 'link'
   
   // Load login state from localStorage on component mount
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -87,6 +92,33 @@ export default function MainScreen() {
     setIsLoggedIn(false);
   };
 
+  const handlePastedContentSubmit = () => {
+    if (pastedContent.trim()) {
+      navigate("/results", { 
+        state: { 
+          pastedContent: pastedContent,
+          contentType: inputMode 
+        } 
+      });
+    }
+  };
+
+  const handleSubmit = () => {
+    if (inputMode === "upload" && selectedFile) {
+      navigate("/results", { state: { file: selectedFile } });
+    } else if ((inputMode === "text" || inputMode === "link") && pastedContent.trim()) {
+      navigate("/results", { 
+        state: { 
+          pastedContent: pastedContent,
+          contentType: inputMode 
+        } 
+      });
+    }
+  };
+
+  const isValidContent = (inputMode === "upload" && selectedFile) || 
+                        ((inputMode === "text" || inputMode === "link") && pastedContent.trim().length > 0);
+
   return (
     <div className="relative min-h-screen flex flex-col font-piazzolla">
       {/* Background */}
@@ -146,63 +178,150 @@ export default function MainScreen() {
           </div>
         </div>
 
-        {/* Upload Card */}
-        <div
-          onClick={triggerFileUpload}
-          className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-3xl shadow-lg p-12 text-center cursor-pointer hover:scale-105 hover:bg-white/30 transition-all duration-300 flex flex-col items-center justify-center"
-        >
-          {/* Top Upload Icon */}
-          <div className="bg-white/20 backdrop-blur-lg rounded-full p-6 mb-6 shadow-inner hover:scale-110 transition-all duration-300">
-            <FaFileUpload className="text-6xl text-black" />
+        {/* Main Content Container */}
+        <div className="flex flex-col items-center justify-center gap-8 px-4">
+          {/* Unified Upload/Paste Card */}
+          <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-3xl shadow-lg p-12 text-center transition-all duration-300 flex flex-col items-center justify-center w-full max-w-2xl">
+            {/* Mode Toggle Buttons */}
+            <div className="flex justify-center gap-3 mb-8">
+              <button
+                onClick={() => {
+                  setInputMode("upload");
+                  setPastedContent("");
+                }}
+                className={`flex items-center gap-2 font-medium px-5 py-2.5 rounded-xl transition-all duration-200 ${
+                  inputMode === "upload"
+                    ? "bg-orange-300 text-black shadow-md scale-105"
+                    : "bg-white/20 text-black hover:bg-white/30"
+                }`}
+              >
+                <FaFileUpload className="text-lg" /> Upload File
+              </button>
+              <button
+                onClick={() => {
+                  setInputMode("text");
+                  setSelectedFile(null);
+                }}
+                className={`flex items-center gap-2 font-medium px-5 py-2.5 rounded-xl transition-all duration-200 ${
+                  inputMode === "text"
+                    ? "bg-orange-300 text-black shadow-md scale-105"
+                    : "bg-white/20 text-black hover:bg-white/30"
+                }`}
+              >
+                <FaPaste className="text-lg" /> Paste Text
+              </button>
+              <button
+                onClick={() => {
+                  setInputMode("link");
+                  setSelectedFile(null);
+                }}
+                className={`flex items-center gap-2 font-medium px-5 py-2.5 rounded-xl transition-all duration-200 ${
+                  inputMode === "link"
+                    ? "bg-orange-300 text-black shadow-md scale-105"
+                    : "bg-white/20 text-black hover:bg-white/30"
+                }`}
+              >
+                <FaLink className="text-lg" /> Paste Link
+              </button>
+            </div>
+
+            {/* Conditional Content Based on Mode */}
+            {inputMode === "upload" ? (
+              <>
+                {/* Top Upload Icon */}
+                <div 
+                  onClick={triggerFileUpload}
+                  className="bg-white/20 backdrop-blur-lg rounded-full p-6 mb-6 shadow-inner hover:scale-110 transition-all duration-300 cursor-pointer"
+                >
+                  <FaFileUpload className="text-6xl text-black" />
+                </div>
+
+                <h1 className="text-3xl font-bold mb-3 text-black text-center">
+                  Upload Content for Authentication
+                </h1>
+                <p className="text-black mb-6 text-sm leading-relaxed text-center">
+                  Click to select your images, text, or video content to verify its authenticity.
+                </p>
+
+                {/* Content Type Icons */}
+                <div className="flex justify-center gap-6 mb-6 text-sm text-black">
+                  <div className="flex items-center gap-2 font-medium">
+                    <FaFileAlt className="text-lg" /> Text
+                  </div>
+                  <div className="flex items-center gap-2 font-medium">
+                    <FaImage className="text-lg" /> Images
+                  </div>
+                  <div className="flex items-center gap-2 font-medium">
+                    <FaVideo className="text-lg" /> Videos
+                  </div>
+                  <div className="flex items-center gap-2 font-medium">
+                    <FaVolumeUp className="text-lg" /> Audio
+                  </div>
+                </div>
+
+                {selectedFile && (
+                  <p className="mb-6 text-sm text-green-700 font-medium">
+                    ✓ Selected: {selectedFile.name}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Top Paste Icon */}
+                <div className="bg-white/20 backdrop-blur-lg rounded-full p-6 mb-6 shadow-inner">
+                  <FaPaste className="text-6xl text-black" />
+                </div>
+
+                <h1 className="text-3xl font-bold mb-3 text-black text-center">
+                  {inputMode === "text" ? "Paste Text Content" : "Paste Link"}
+                </h1>
+                <p className="text-black mb-6 text-sm leading-relaxed text-center">
+                  {inputMode === "text" 
+                    ? "Paste your text content to verify its authenticity."
+                    : "Paste a URL to verify the content's authenticity."}
+                </p>
+
+                {/* Input Area */}
+                {inputMode === "text" ? (
+                  <textarea
+                    value={pastedContent}
+                    onChange={(e) => setPastedContent(e.target.value)}
+                    placeholder="Paste your text content here..."
+                    className="bg-white/30 border border-white/20 rounded-xl px-4 py-3 w-full text-black placeholder-black/70 resize-none h-40 mb-6 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={pastedContent}
+                    onChange={(e) => setPastedContent(e.target.value)}
+                    placeholder="Paste URL here (e.g., https://example.com/article)"
+                    className="bg-white/30 border border-white/20 rounded-xl px-4 py-3 w-full text-black placeholder-black/70 mb-6 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  />
+                )}
+
+                {pastedContent.trim() && (
+                  <p className="mb-6 text-sm text-green-700 font-medium">
+                    ✓ Ready to analyze {inputMode}
+                  </p>
+                )}
+              </>
+            )}
+
+            {/* Unified Submit Button */}
+            <button
+              onClick={handleSubmit}
+              disabled={!isValidContent}
+              className={`flex items-center justify-center bg-white/25 backdrop-blur-lg border border-white/30 text-black font-bold p-6 rounded-3xl shadow-lg text-3xl 
+                transition-all duration-300
+                ${
+                  isValidContent
+                    ? "hover:scale-110 hover:bg-white/40 hover:shadow-xl cursor-pointer"
+                    : "opacity-50 cursor-not-allowed"
+                }`}
+            >
+              <FaPaperPlane />
+            </button>
           </div>
-
-          <h1 className="text-3xl font-bold mb-3 text-black text-center">
-            Upload Content for Authentication
-          </h1>
-          <p className="text-black mb-6 text-sm leading-relaxed text-center">
-            Drop your images, text, or video content here to verify its
-            authenticity.
-          </p>
-
-          {/* Content Type Icons */}
-          <div className="flex justify-center gap-6 mb-6 text-sm text-black">
-            <div className="flex items-center gap-2 font-medium">
-              <FaFileAlt className="text-lg" /> Text
-            </div>
-            <div className="flex items-center gap-2 font-medium">
-              <FaImage className="text-lg" /> Images
-            </div>
-            <div className="flex items-center gap-2 font-medium">
-              <FaVideo className="text-lg" /> Videos
-            </div>
-            <div className="flex items-center gap-2 font-medium">
-              <FaVolumeUp className="text-lg" /> Audio
-            </div>
-          </div>
-
-          {/* Upload Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (selectedFile) navigate("/results", { state: { file: selectedFile } });
-            }}
-            disabled={!selectedFile}
-            className={`flex items-center justify-center bg-white/25 backdrop-blur-lg border border-white/30 text-black font-bold p-6 rounded-3xl shadow-lg text-3xl 
-              transition-all duration-300
-              ${
-                selectedFile
-                  ? "hover:scale-110 hover:bg-white/40 hover:shadow-xl cursor-pointer"
-                  : "opacity-50 cursor-not-allowed"
-              }`}
-          >
-            <FaPaperPlane />
-          </button>
-
-          {selectedFile && (
-            <p className="mt-4 text-sm text-green-700 font-medium">
-              ✓ Selected: {selectedFile.name}
-            </p>
-          )}
         </div>
 
         {/* Right Sidebar Toggle */}
