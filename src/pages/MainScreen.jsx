@@ -18,6 +18,8 @@ import {
 import { BsCaretLeft, BsCaretRight } from "react-icons/bs";
 import { motion, AnimatePresence } from "framer-motion";
 import { PieChart, Pie, Cell } from "recharts";
+import axios from "axios";
+
 
 export default function MainScreen() {
   const navigate = useNavigate();
@@ -29,7 +31,8 @@ export default function MainScreen() {
   const [contentType, setContentType] = useState("text");
   const [inputMode, setInputMode] = useState("upload");
   const [isLoading, setIsLoading] = useState(false);
-
+  const backend_url = process.env.REACT_APP_BACKEND_URL;
+  const [loadingMessage, setLoadingMessage] = useState('Analyse Content...');
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     const saved = localStorage.getItem("checkpointLoggedIn");
     return saved === "true";
@@ -38,7 +41,45 @@ export default function MainScreen() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const fileInputRef = useRef(null);
+  const [alertType, setAlertType] = useState("");
+  const [analysisResult, setAnalysisResult] = useState({ confidence_score: 0, confidence_score_calculation: "", lineage_graph: {}, reasons: [], verdict: "", what_would_change: "", });
+  
+  const getLoadingMessage = (contentType) => {
+  const messages = {
+    text: "Analyzing Text Content...",
+    image: "Detecting Image Authenticity...",
+    video: "Verifying Video Content...",
+    audio: "Analyzing Audio File...",
+    pdf: "Scanning PDF Document...",
+    doc: "Processing Document...",
+    default: "Analyzing Content..."
+  };
+  return messages[contentType] || messages.default;
+};
 
+// Function to determine content type from file or alert
+const determineContentType = (file, alertTitle) => {
+  if (file) {
+    const fileName = file.name.toLowerCase();
+    if (fileName.match(/\.(jpg|jpeg|png|gif|bmp|svg|webp)$/)) return 'image';
+    if (fileName.match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/)) return 'video';
+    if (fileName.match(/\.(mp3|wav|ogg|m4a|flac|aac)$/)) return 'audio';
+    if (fileName.match(/\.pdf$/)) return 'pdf';
+    if (fileName.match(/\.(doc|docx|txt|rtf)$/)) return 'doc';
+    if (fileName.match(/\.(txt|md|csv)$/)) return 'text';
+  }
+  
+  // Fallback to alert title
+  if (alertTitle) {
+    if (alertTitle.toLowerCase().includes('image')) return 'image';
+    if (alertTitle.toLowerCase().includes('video')) return 'video';
+    if (alertTitle.toLowerCase().includes('audio')) return 'audio';
+    if (alertTitle.toLowerCase().includes('text') || alertTitle.toLowerCase().includes('news')) return 'text';
+    if (alertTitle.toLowerCase().includes('document')) return 'doc';
+  }
+  
+  return 'default';
+};
   useEffect(() => {
     localStorage.setItem("checkpointLoggedIn", isLoggedIn);
   }, [isLoggedIn]);
@@ -93,7 +134,8 @@ export default function MainScreen() {
     setIsLoggedIn(false);
   };
 
-  const handleSubmit = () => {
+
+ const handleSubmit = async () => {
     const isValidContent =
       (inputMode === "upload" && selectedFile) ||
       ((inputMode === "text" || inputMode === "link") &&
@@ -102,9 +144,59 @@ export default function MainScreen() {
     if (!isValidContent) return;
 
     setIsLoading(true);
-    setTimeout(() => {
-      if (inputMode === "upload" && selectedFile) {
-        navigate("/results", { state: { file: selectedFile } });
+
+    if (inputMode === "upload" && selectedFile) {
+        try {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+
+          console.log("⬆️ Sending file:", selectedFile);
+
+          setLoadingMessage(`Uploading file to the server...`);
+          const res = await axios.post(`${backend_url}/upload`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          console.log("✅ Upload success:", res.data);
+          
+          setTimeout(() => {
+             setLoadingMessage("Getting audio description......");
+          },1500);
+          
+          const payload = { path : res.data.file.path.split('/')[2]}
+          
+          const audio_res = await axios.post(`${backend_url}/get-audio-description`, payload)
+         
+
+          if (!audio_res) {
+             setIsLoading(false);
+          }
+
+          setLoadingMessage("Verifying News....");
+          const verify_payload = { "text" : audio_res.data.data };
+          const verify_res = await axios.post(`${backend_url}/get-audio-analysis`, verify_payload);
+          
+          if(!verify_res){
+             setIsLoading(false);
+          }
+
+          console.log(verify_res.data);
+          
+
+          const type = determineContentType(selectedFile, alertType);
+          setAlertType(type);
+          navigate("/results", { 
+          state: { 
+            file: selectedFile,
+            analysisResult: verify_res.data.analysis, // <-- Pass your analysis result here
+            type: alertType
+          } 
+        });
+
+        } catch (err) {
+          console.error("❌ Upload failed:", err);
+        }
+        
       } else if (
         (inputMode === "text" || inputMode === "link") &&
         pastedContent.trim()
@@ -113,9 +205,10 @@ export default function MainScreen() {
           state: { pastedContent: pastedContent, contentType: inputMode },
         });
       }
-      setIsLoading(false);
-    }, 3000);
+    
+
   };
+
 
   // === Loading Screen ===
   if (isLoading) {
@@ -127,7 +220,7 @@ export default function MainScreen() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
         >
-          Analyzing Content...
+          {loadingMessage}
         </motion.h1>
         <motion.div animate={rotateInfinite}>
           <PieChart width={300} height={300}>
