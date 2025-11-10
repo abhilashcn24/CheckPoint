@@ -17,6 +17,7 @@ import {
 } from "react-icons/fa";
 import { BsCaretLeft, BsCaretRight } from "react-icons/bs";
 import { motion, AnimatePresence } from "framer-motion";
+import { PieChart, Pie, Cell } from "recharts";
 
 export default function MainScreen() {
   const navigate = useNavigate();
@@ -25,22 +26,21 @@ export default function MainScreen() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pastedContent, setPastedContent] = useState("");
-  const [contentType, setContentType] = useState("text"); // 'text' or 'link'
-  const [inputMode, setInputMode] = useState("upload"); // 'upload', 'text', or 'link'
-  
-  // Load login state from localStorage on component mount
+  const [contentType, setContentType] = useState("text");
+  const [inputMode, setInputMode] = useState("upload");
+  const [isLoading, setIsLoading] = useState(false);
+
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    const saved = localStorage.getItem('checkpointLoggedIn');
-    return saved === 'true';
+    const saved = localStorage.getItem("checkpointLoggedIn");
+    return saved === "true";
   });
-  
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Save login state to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('checkpointLoggedIn', isLoggedIn);
+    localStorage.setItem("checkpointLoggedIn", isLoggedIn);
   }, [isLoggedIn]);
 
   const alerts = [
@@ -49,17 +49,18 @@ export default function MainScreen() {
     { title: "Misleading Video Content", time: "12m ago", icon: <FaVideo /> },
     { title: "False Health Claims", time: "18m ago", icon: <FaFileAlt /> },
     { title: "Manipulated Statistics", time: "25m ago", icon: <FaFileAlt /> },
-    { title: "Breaking: Fake News Alert", time: "2m ago", icon: <FaFileAlt /> },
-    { title: "Doctored Image Detected", time: "5m ago", icon: <FaImage /> },
-    { title: "Misleading Video Content", time: "12m ago", icon: <FaVideo /> },
-    { title: "False Health Claims", time: "18m ago", icon: <FaFileAlt /> },
-    { title: "Manipulated Statistics", time: "25m ago", icon: <FaFileAlt /> },
-    { title: "Breaking: Fake News Alert", time: "2m ago", icon: <FaFileAlt /> },
-    { title: "Doctored Image Detected", time: "5m ago", icon: <FaImage /> },
-    { title: "Misleading Video Content", time: "12m ago", icon: <FaVideo /> },
-    { title: "False Health Claims", time: "18m ago", icon: <FaFileAlt /> },
-    { title: "Manipulated Statistics", time: "25m ago", icon: <FaFileAlt /> },
   ];
+
+  const loadingData = [
+    { name: "Authentic", value: 70 },
+    { name: "Manipulated", value: 30 },
+  ];
+
+  const LOADING_COLORS = ["#f97316", "#1E1E1E"];
+  const rotateInfinite = {
+    rotate: [0, 360],
+    transition: { repeat: Infinity, duration: 2, ease: "linear" },
+  };
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -92,33 +93,56 @@ export default function MainScreen() {
     setIsLoggedIn(false);
   };
 
-  const handlePastedContentSubmit = () => {
-    if (pastedContent.trim()) {
-      navigate("/results", { 
-        state: { 
-          pastedContent: pastedContent,
-          contentType: inputMode 
-        } 
-      });
-    }
-  };
-
   const handleSubmit = () => {
-    if (inputMode === "upload" && selectedFile) {
-      navigate("/results", { state: { file: selectedFile } });
-    } else if ((inputMode === "text" || inputMode === "link") && pastedContent.trim()) {
-      navigate("/results", { 
-        state: { 
-          pastedContent: pastedContent,
-          contentType: inputMode 
-        } 
-      });
-    }
+    const isValidContent =
+      (inputMode === "upload" && selectedFile) ||
+      ((inputMode === "text" || inputMode === "link") &&
+        pastedContent.trim().length > 0);
+
+    if (!isValidContent) return;
+
+    setIsLoading(true);
+    setTimeout(() => {
+      if (inputMode === "upload" && selectedFile) {
+        navigate("/results", { state: { file: selectedFile } });
+      } else if (
+        (inputMode === "text" || inputMode === "link") &&
+        pastedContent.trim()
+      ) {
+        navigate("/results", {
+          state: { pastedContent: pastedContent, contentType: inputMode },
+        });
+      }
+      setIsLoading(false);
+    }, 3000);
   };
 
-  const isValidContent = (inputMode === "upload" && selectedFile) || 
-                        ((inputMode === "text" || inputMode === "link") && pastedContent.trim().length > 0);
+  // === Loading Screen ===
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-black text-white flex flex-col items-center justify-center">
+        <motion.h1
+          className="text-2xl font-bold mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+        >
+          Analyzing Content...
+        </motion.h1>
+        <motion.div animate={rotateInfinite}>
+          <PieChart width={300} height={300}>
+            <Pie data={loadingData} cx="50%" cy="50%" outerRadius={100} dataKey="value">
+              {loadingData.map((_, i) => (
+                <Cell key={i} fill={LOADING_COLORS[i]} />
+              ))}
+            </Pie>
+          </PieChart>
+        </motion.div>
+      </div>
+    );
+  }
 
+  // === Main Screen ===
   return (
     <div className="relative min-h-screen flex flex-col font-piazzolla">
       {/* Background */}
@@ -165,7 +189,9 @@ export default function MainScreen() {
             </button>
 
             <button
-              onClick={() => isLoggedIn ? handleLogout() : setShowLoginModal(true)}
+              onClick={() =>
+                isLoggedIn ? handleLogout() : setShowLoginModal(true)
+              }
               className={`flex items-center gap-3 font-semibold px-4 py-3 rounded-3xl w-full shadow-md transition-all duration-200 ${
                 isLoggedIn
                   ? "bg-red-300 text-black hover:bg-red-200 hover:scale-105"
@@ -178,11 +204,10 @@ export default function MainScreen() {
           </div>
         </div>
 
-        {/* Main Content Container */}
+        {/* Main Content */}
         <div className="flex flex-col items-center justify-center gap-8 px-4">
-          {/* Unified Upload/Paste Card */}
           <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-3xl shadow-lg p-12 text-center transition-all duration-300 flex flex-col items-center justify-center w-full max-w-2xl">
-            {/* Mode Toggle Buttons */}
+            {/* Mode Toggle */}
             <div className="flex justify-center gap-3 mb-8">
               <button
                 onClick={() => {
@@ -225,40 +250,21 @@ export default function MainScreen() {
               </button>
             </div>
 
-            {/* Conditional Content Based on Mode */}
+            {/* Upload / Paste */}
             {inputMode === "upload" ? (
               <>
-                {/* Top Upload Icon */}
-                <div 
+                <div
                   onClick={triggerFileUpload}
                   className="bg-white/20 backdrop-blur-lg rounded-full p-6 mb-6 shadow-inner hover:scale-110 transition-all duration-300 cursor-pointer"
                 >
                   <FaFileUpload className="text-6xl text-black" />
                 </div>
-
                 <h1 className="text-3xl font-bold mb-3 text-black text-center">
                   Upload Content for Authentication
                 </h1>
                 <p className="text-black mb-6 text-sm leading-relaxed text-center">
                   Click to select your images, text, or video content to verify its authenticity.
                 </p>
-
-                {/* Content Type Icons */}
-                <div className="flex justify-center gap-6 mb-6 text-sm text-black">
-                  <div className="flex items-center gap-2 font-medium">
-                    <FaFileAlt className="text-lg" /> Text
-                  </div>
-                  <div className="flex items-center gap-2 font-medium">
-                    <FaImage className="text-lg" /> Images
-                  </div>
-                  <div className="flex items-center gap-2 font-medium">
-                    <FaVideo className="text-lg" /> Videos
-                  </div>
-                  <div className="flex items-center gap-2 font-medium">
-                    <FaVolumeUp className="text-lg" /> Audio
-                  </div>
-                </div>
-
                 {selectedFile && (
                   <p className="mb-6 text-sm text-green-700 font-medium">
                     ✓ Selected: {selectedFile.name}
@@ -267,21 +273,18 @@ export default function MainScreen() {
               </>
             ) : (
               <>
-                {/* Top Paste Icon */}
                 <div className="bg-white/20 backdrop-blur-lg rounded-full p-6 mb-6 shadow-inner">
                   <FaPaste className="text-6xl text-black" />
                 </div>
-
                 <h1 className="text-3xl font-bold mb-3 text-black text-center">
                   {inputMode === "text" ? "Paste Text Content" : "Paste Link"}
                 </h1>
                 <p className="text-black mb-6 text-sm leading-relaxed text-center">
-                  {inputMode === "text" 
+                  {inputMode === "text"
                     ? "Paste your text content to verify its authenticity."
                     : "Paste a URL to verify the content's authenticity."}
                 </p>
 
-                {/* Input Area */}
                 {inputMode === "text" ? (
                   <textarea
                     value={pastedContent}
@@ -298,33 +301,20 @@ export default function MainScreen() {
                     className="bg-white/30 border border-white/20 rounded-xl px-4 py-3 w-full text-black placeholder-black/70 mb-6 focus:outline-none focus:ring-2 focus:ring-orange-300"
                   />
                 )}
-
-                {pastedContent.trim() && (
-                  <p className="mb-6 text-sm text-green-700 font-medium">
-                    ✓ Ready to analyze {inputMode}
-                  </p>
-                )}
               </>
             )}
 
-            {/* Unified Submit Button */}
+            {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              disabled={!isValidContent}
-              className={`flex items-center justify-center bg-white/25 backdrop-blur-lg border border-white/30 text-black font-bold p-6 rounded-3xl shadow-lg text-3xl 
-                transition-all duration-300
-                ${
-                  isValidContent
-                    ? "hover:scale-110 hover:bg-white/40 hover:shadow-xl cursor-pointer"
-                    : "opacity-50 cursor-not-allowed"
-                }`}
+              className={`flex items-center justify-center bg-white/25 backdrop-blur-lg border border-white/30 text-black font-bold p-6 rounded-3xl shadow-lg text-3xl transition-all duration-300 hover:scale-110 hover:bg-white/40 hover:shadow-xl`}
             >
               <FaPaperPlane />
             </button>
           </div>
         </div>
 
-        {/* Right Sidebar Toggle */}
+        {/* Sidebar */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-orange-300/80 backdrop-blur-sm rounded-l-xl px-3 py-8 cursor-pointer hover:bg-orange-200/80 transition shadow-lg text-black text-2xl font-bold"
@@ -332,16 +322,13 @@ export default function MainScreen() {
           {sidebarOpen ? <BsCaretRight /> : <BsCaretLeft />}
         </button>
 
-        {/* Right Sidebar */}
         <div
           className={`absolute top-1/2 right-4 -translate-y-1/2 w-80 bg-white/10 backdrop-blur-sm border border-white/20 shadow-md rounded-3xl z-20 transition-transform duration-300 ease-in-out max-h-[90vh] ${
             sidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="p-6 h-full max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-orange-500 scrollbar-track-orange-200">
-            <h2 className="text-white text-xl font-bold mb-6 mt-4 sticky top-0 py-2 z-10">
-              Recent Alerts
-            </h2>
+          <div className="p-6 h-full overflow-y-auto">
+            <h2 className="text-white text-xl font-bold mb-6 mt-4">Recent Alerts</h2>
             <div className="flex flex-col gap-4 pb-6">
               {alerts.map((alert, index) => (
                 <div
@@ -351,9 +338,7 @@ export default function MainScreen() {
                 >
                   <div className="flex items-start justify-between text-white">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-sm mb-2">
-                        {alert.title}
-                      </h3>
+                      <h3 className="font-semibold text-sm mb-2">{alert.title}</h3>
                       <p className="text-xs opacity-75">{alert.time}</p>
                     </div>
                     <div className="text-3xl ml-3">{alert.icon}</div>
@@ -377,112 +362,6 @@ export default function MainScreen() {
           </div>
         </div>
       </footer>
-
-      {/* === LOGIN MODAL === */}
-      <AnimatePresence>
-        {showLoginModal && (
-          <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-3xl shadow-2xl p-10 w-[400px] text-center text-black"
-              initial={{ scale: 0.8, y: 40 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-            >
-              <h2 className="text-3xl font-bold mb-6">
-                {isSignUp ? "Sign Up" : "Login"}
-              </h2>
-              <form
-                onSubmit={handleLogin}
-                className="flex flex-col gap-4 items-center"
-              >
-                {isSignUp && (
-                  <input
-                    type="text"
-                    placeholder="Username"
-                    required
-                    className="bg-white/30 border border-white/20 rounded-lg px-4 py-2 w-full text-black placeholder-black/70"
-                  />
-                )}
-                <input
-                  type="email"
-                  placeholder="Email"
-                  required
-                  className="bg-white/30 border border-white/20 rounded-lg px-4 py-2 w-full text-black placeholder-black/70"
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  required
-                  className="bg-white/30 border border-white/20 rounded-lg px-4 py-2 w-full text-black placeholder-black/70"
-                />
-                <button
-                  type="submit"
-                  className="bg-orange-400 hover:bg-orange-300 text-white font-semibold px-8 py-2 rounded-xl transition-all"
-                >
-                  {isSignUp ? "Create Account" : "Login"}
-                </button>
-              </form>
-              <p
-                className="mt-4 text-sm text-black cursor-pointer hover:underline"
-                onClick={() => setIsSignUp(!isSignUp)}
-              >
-                {isSignUp
-                  ? "Already have an account? Login"
-                  : "New user? Sign Up"}
-              </p>
-              <button
-                onClick={() => setShowLoginModal(false)}
-                className="mt-6 text-xs text-black/70 hover:underline"
-              >
-                Close
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* === LOGIN PROMPT POPUP === */}
-      <AnimatePresence>
-        {showLoginPrompt && (
-          <motion.div
-            className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-3xl shadow-xl p-8 w-[350px] text-center text-black"
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-            >
-              <h2 className="text-2xl font-bold mb-4">Login Required</h2>
-              <p className="text-sm mb-6">
-                You need to be logged in to access API Production.
-              </p>
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={handleLoginNowClick}
-                  className="bg-orange-400 hover:bg-orange-300 text-white px-6 py-2 rounded-xl font-semibold"
-                >
-                  Login Now
-                </button>
-                <button
-                  onClick={() => setShowLoginPrompt(false)}
-                  className="bg-white/30 hover:bg-white/40 text-black px-6 py-2 rounded-xl font-semibold"
-                >
-                  Cancel
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

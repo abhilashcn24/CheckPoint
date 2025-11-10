@@ -38,12 +38,12 @@ const viralityData = [
 const ORIGINALITY_COLORS = ["#FFE4B5", "#4A4A4A"];
 const CONFIDENCE_COLORS = ["#FFE4B5", "#C84B31"];
 
-const loadingData = [
-  { name: "Authentic", value: 70 },
-  { name: "Manipulated", value: 30 }
-];
+// const loadingData = [
+//   { name: "Authentic", value: 70 },
+//   { name: "Manipulated", value: 30 }
+// ];
 
-const LOADING_COLORS = ["#f97316", "#1E1E1E"];
+// const LOADING_COLORS = ["#f97316", "#1E1E1E"];
 
 // Social media icons array
 const allSocialMediaIcons = [
@@ -93,23 +93,18 @@ const determineContentType = (file, alertTitle) => {
 };
 
 export default function Results() {
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [selectedIcons, setSelectedIcons] = useState([]);
-  const [loadingMessage, setLoadingMessage] = useState("Analyzing Content...");
+  // const [loadingMessage, setLoadingMessage] = useState("Analyzing Content...");
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Get content type from location state (passed from MainScreen)
-    const file = location.state?.file;
-    const alertTitle = location.state?.alertTitle;
-    
-    const contentType = determineContentType(file, alertTitle);
-    setLoadingMessage(getLoadingMessage(contentType));
-    
-    const timer = setTimeout(() => setLoading(false), 3000);
-    return () => clearTimeout(timer);
-  }, [location]);
+  const file = location.state?.file;
+  const alertTitle = location.state?.alertTitle;
+  determineContentType(file, alertTitle);
+}, [location]);
+
 
   useEffect(() => {
     // Randomly select 4 icons from the available icons
@@ -124,27 +119,27 @@ export default function Results() {
   const fadeInRight = { hidden: { x: 50, opacity: 0 }, visible: { x: 0, opacity: 1, transition: { duration: 1 } } };
   const rotateInfinite = { rotate: [0, 360], transition: { repeat: Infinity, duration: 2, ease: "linear" } };
 
-  if (loading) {
-    return (
-      <div className="h-screen bg-black text-white flex flex-col items-center justify-center">
-        <motion.h1
-          className="text-2xl font-bold mb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-        >
-          {loadingMessage}
-        </motion.h1>
-        <motion.div animate={rotateInfinite}>
-          <PieChart width={300} height={300}>
-            <Pie data={loadingData} cx="50%" cy="50%" outerRadius={100} dataKey="value">
-              {loadingData.map((_, i) => <Cell key={i} fill={LOADING_COLORS[i]} />)}
-            </Pie>
-          </PieChart>
-        </motion.div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="h-screen bg-black text-white flex flex-col items-center justify-center">
+  //       <motion.h1
+  //         className="text-2xl font-bold mb-6"
+  //         initial={{ opacity: 0, y: -20 }}
+  //         animate={{ opacity: 1, y: 0 }}
+  //         transition={{ duration: 1 }}
+  //       >
+  //         {loadingMessage}
+  //       </motion.h1>
+  //       <motion.div animate={rotateInfinite}>
+  //         <PieChart width={300} height={300}>
+  //           <Pie data={loadingData} cx="50%" cy="50%" outerRadius={100} dataKey="value">
+  //             {loadingData.map((_, i) => <Cell key={i} fill={LOADING_COLORS[i]} />)}
+  //           </Pie>
+  //         </PieChart>
+  //       </motion.div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden flex flex-col">
