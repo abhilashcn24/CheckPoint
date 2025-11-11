@@ -143,6 +143,8 @@ const determineContentType = (file, alertTitle) => {
 
     if (!isValidContent) return;
 
+    console.log("clicked", inputMode);
+    
     setIsLoading(true);
 
     if (inputMode === "upload" && selectedFile) {
@@ -150,14 +152,14 @@ const determineContentType = (file, alertTitle) => {
           const formData = new FormData();
           formData.append("file", selectedFile);
 
-          console.log("⬆️ Sending file:", selectedFile);
+          
 
           setLoadingMessage(`Uploading file to the server...`);
           const res = await axios.post(`${backend_url}/upload`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
 
-          console.log("✅ Upload success:", res.data);
+          console.log("✅ Upload success:");
           
           setTimeout(() => {
              setLoadingMessage("Getting audio description......");
@@ -180,7 +182,9 @@ const determineContentType = (file, alertTitle) => {
              setIsLoading(false);
           }
 
-          console.log(verify_res.data);
+          console.log(verify_res);
+          
+          console.log(verify_res.data.data.analysis);
           
 
           const type = determineContentType(selectedFile, alertType);
@@ -188,7 +192,7 @@ const determineContentType = (file, alertTitle) => {
           navigate("/results", { 
           state: { 
             file: selectedFile,
-            analysisResult: verify_res.data.analysis, // <-- Pass your analysis result here
+            analysisResult: verify_res.data.data.analysis, // <-- Pass your analysis result here
             type: alertType
           } 
         });

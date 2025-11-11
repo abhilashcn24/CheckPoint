@@ -7,11 +7,13 @@ import Gradient from "../assets/CheckPoint/ResultPage.png";
 import EiffelImage from "../assets/CheckPoint/image.png";
 
 // Import social media icons
-import LinkedinIcon from "../assets/CheckPoint/Social Media Icons & Logos (Community)/LinkedIn.png";
-import FBIcon from "../assets/CheckPoint/Social Media Icons & Logos (Community)/FB.png";
+
+
 import WhatsappIcon from "../assets/CheckPoint/Social Media Icons & Logos (Community)/Whatsapp.png";
 import XIcon from "../assets/CheckPoint/Social Media Icons & Logos (Community)/X.png";
-import TelegramIcon from "../assets/CheckPoint/Social Media Icons & Logos (Community)/Telegram.png";
+import InstagramIcon from '../assets/CheckPoint/Social Media Icons & Logos (Community)/Instagram.png';
+import YouTubeIcon from '../assets/CheckPoint/Social Media Icons & Logos (Community)/YouTube.png';
+import { link } from "../utils/links.js";
 
 
 
@@ -39,13 +41,19 @@ const CONFIDENCE_COLORS = ["#FFE4B5", "#C84B31"];
 
 // Social media icons array
 const allSocialMediaIcons = [
-  { icon: LinkedinIcon, name: "LinkedIn" },
-  { icon: FBIcon, name: "Facebook" },
+  { icon: InstagramIcon, name: "Instagram" },
+  { icon: YouTubeIcon, name: "Youtube" },
   { icon: WhatsappIcon, name: "WhatsApp" },
   { icon: XIcon, name: "X" },
-  { icon: TelegramIcon, name: "Telegram" }
 ];
 
+const socialIcons = [
+    { icon: InstagramIcon, platform: "instagram" },
+    { icon: YouTubeIcon, platform: "youtube" },
+    { icon: WhatsappIcon, platform: "whatsapp" },
+    { icon: XIcon, platform: "x" }
+  ];
+  
 // Function to get loading message based on content type
 const getLoadingMessage = (contentType) => {
   const messages = {
@@ -93,43 +101,7 @@ export default function Results() {
   const [contentType, setContentType] = useState("default");
   const [alertTitle, setAlertTitle] = useState("");
 
-  const analysisResult = location.state?.analysisResult || {
-  "verdict": "AI GENERATED",
-  "confidence_score": 92,
-  "reasons": [
-    "The writing style exhibits consistent sentence structure and formal tone typical of large language models.",
-    "Repetitive phrasing and lack of personal anecdotes suggest non-human authorship.",
-    "Metadata analysis shows generation patterns aligning with AI-generated content (e.g., low lexical diversity)."
-  ],
-  "what_would_change": "Confidence would decrease if evidence showed the text was sourced from multiple unique human authors or included verifiable firsthand experiences.",
-  "lineage_graph": {
-    "claim": "This article was likely written by an AI system.",
-    "connections": [
-      {
-        "source": "AI Text Classifier",
-        "url": "https://example.com/ai-detector-report",
-        "title": "AI Text Detector Report: 92% Probability",
-        "image": "https://example.com/images/ai-detector.png",
-        "link_type": "Supports"
-      },
-      {
-        "source": "Stylometric Analysis",
-        "url": "https://example.com/stylometry-study",
-        "title": "Stylometric Similarity to GPT Model Outputs",
-        "image": "https://example.com/images/style-analysis.png",
-        "link_type": "Supports"
-      },
-      {
-        "source": "Human Reviewer",
-        "url": "https://example.com/human-review",
-        "title": "Human Reviewer Assessment",
-        "image": "https://example.com/images/review.png",
-        "link_type": "Contradict"
-      }
-    ]
-  },
-  "confidence_score_calculation": "Confidence score (92/100) derived from ensemble results of AI detectors (weighted 60%), linguistic feature analysis (25%), and human review comparison (15%)."
-}
+  const analysisResult = location.state?.analysisResult 
   
   const type = location.state?.type || "Analyzing Content..."
 
@@ -144,6 +116,12 @@ const confidenceData = [
 ];
 
 
+const channels = Object.keys(link);
+const randomChannel = channels[Math.floor(Math.random() * channels.length)];
+const platforms = Object.keys(link[randomChannel]);
+const randomPlatform = platforms[Math.floor(Math.random() * platforms.length)];
+
+const randomLink = link[randomChannel][randomPlatform];
   useEffect(() => {
   const file = location.state?.file;
   const alertTitle = location.state?.alertTitle;
@@ -165,6 +143,8 @@ const confidenceData = [
   useEffect(() => {
     // Randomly select 4 icons from the available icons
     const shuffled = [...allSocialMediaIcons].sort(() => 0.5 - Math.random());
+    console.log(shuffled);
+    
     setSelectedIcons(shuffled.slice(0, 4));
   }, []);
 
@@ -175,7 +155,7 @@ const confidenceData = [
   const fadeInRight = { hidden: { x: 50, opacity: 0 }, visible: { x: 0, opacity: 1, transition: { duration: 1 } } };
   const rotateInfinite = { rotate: [0, 360], transition: { repeat: Infinity, duration: 2, ease: "linear" } };
 
-  // console.log(analysisResult);
+  console.log(analysisResult);
   
 
   return (
@@ -404,19 +384,26 @@ const confidenceData = [
         </motion.div>
 
         {/* Social Media Icons */}
-        <motion.div variants={fadeInUp} initial="hidden" animate="visible" className="max-w-6xl mx-auto mt-8 flex justify-end gap-6 pr-6">
-          {selectedIcons.map((social, index) => (
-            <div 
-              key={index}
-              className="w-10 h-10 border-2 border-orange-500/50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-orange-500/20 hover:border-orange-400 transition-all bg-black/40 backdrop-blur-sm overflow-hidden"
-            >
-              <img 
-                src={social.icon} 
-                alt={social.name}
-                className="w-6 h-6 object-contain"
-              />
-            </div>
-          ))}
+        <motion.div initial={{opacity:0, y:40}} animate={{opacity:1, y:0}} className="max-w-6xl mx-auto mt-8 flex flex-col items-center gap-4">
+
+          <h2 className="text-2xl font-bold text-orange-400 mb-2">
+            Verified Sources from: <span className="text-white underline">{randomChannel}</span>
+          </h2>
+
+          <div className="flex gap-6">
+            {socialIcons.map((s, i) => (
+              <a
+                key={i}
+                href={link[randomChannel][s.platform]}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 border-2 border-orange-500/60 rounded-xl flex items-center justify-center hover:bg-orange-500/30 transition"
+              >
+                <img src={s.icon} alt={s.platform} className="w-7 h-7 object-contain" />
+              </a>
+            ))}
+          </div>
+
         </motion.div>
       </div>
 
